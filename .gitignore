@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+
+# Local reference files, not part of the homework submission.
+*.pdf
+Ian_Style_SKILL.zh-TW.md

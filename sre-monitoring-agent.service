@@ -1,0 +1,26 @@
+[Unit]
+Description=SRE Take-home Lightweight Monitoring Agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+Environment=MONITOR_INTERVAL=60
+Environment=CPU_THRESHOLD=85
+Environment=MEMORY_THRESHOLD=90
+Environment=TCP_TIMEOUT=3
+Environment=INTERNAL_TARGETS=www.graid.com:80,192.168.1.254:80
+Environment=EXTERNAL_TARGETS=google.com:443,1.1.1.1:443
+ExecStart=/usr/bin/python3 /opt/sre-monitoring-agent/monitoring_agent.py
+Restart=always
+RestartSec=10
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/log
+
+[Install]
+WantedBy=multi-user.target
