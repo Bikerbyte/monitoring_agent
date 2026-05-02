@@ -1,14 +1,3 @@
-# SRE Take-home Assignment
-
-這份作業是實作一支可以部署在 50 台 Linux Server 上的輕量監控 Agent。
-
-目標不是取代完整監控系統，而是先把主機資源、Zombie Process、內外網 TCP 連線狀態記錄下來。真的出事時，維運人員可以從本機 log 快速判斷是資源問題、DNS 問題、TCP Timeout，還是服務端拒絕連線。
-
-## 檔案
-
-- `monitoring_agent.py`：主要監控程式，只使用 Python standard library，不需要額外安裝套件。
-- `sre-monitoring-agent.service`：systemd service unit，讓 Agent 開機後自動啟動。
-
 ## 監控項目
 
 - CPU 使用率：讀取 `/proc/stat`
@@ -97,17 +86,6 @@ DNS 解析失敗：
 ```json
 {"event":"tcp_check","failure_type":"dns_resolution_error","host":"bad.example","latency_ms":null,"message":"[Errno -2] Name or service not known","ok":false,"port":443,"target":"external-1"}
 ```
-
-## 維運考量
-
-- 門檻與檢查目標都放在參數或環境變數，後續要調整不需要重包程式。
-- DNS 與 TCP 錯誤有分開記錄，排查時可以先判斷是 DNS、路由、防火牆，還是服務本身拒絕連線。
-- Agent 沒有使用第三方套件，部署到多台 Linux Server 的阻力比較低。
-- systemd unit 設定了自動重啟，Agent 異常結束後會再被拉起來。
-- log 保留原始數值與錯誤訊息，方便後續人工查問題，也可以再接到集中式平台。
-
-## 後續可改善項目
-
 - 加上 logrotate，避免 `/var/log/sre-monitoring-agent.log` 無限制成長。
 - 用 Ansible、RPM 或 DEB 包裝部署流程，減少 50 台機器逐台操作的風險。
 - 將結果輸出成 Prometheus node exporter textfile collector 格式。
