@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-SRE Take-home monitoring agent.
+SRE take-home monitoring agent.
 
-這支程式是給 lab 內 Linux Server 使用的輕量 Agent：
-- 定期記錄 CPU / Memory / Zombie Process
-- 檢查內部與外部 TCP 連線
-- 把可追查的結果寫到本機 log 與 stdout
+This agent is intentionally lightweight:
+- collect CPU, memory, and zombie process data from Linux /proc
+- check internal and external TCP connectivity
+- classify DNS and TCP failures
+- write structured JSON logs locally and to stdout
 """
 
 from __future__ import annotations
@@ -51,6 +52,7 @@ class TcpCheckResult:
 
 
 def read_cpu_stat() -> tuple[int, int]:
+    """Return idle and total CPU jiffies from the aggregate /proc/stat row."""
     first_line = Path("/proc/stat").read_text(encoding="utf-8").splitlines()[0]
     fields = first_line.split()
 
@@ -65,6 +67,7 @@ def read_cpu_stat() -> tuple[int, int]:
 
 
 def get_cpu_usage_percent(sample_seconds: float) -> float:
+    """Sample /proc/stat twice and calculate CPU utilization for the interval."""
     idle_before, total_before = read_cpu_stat()
     time.sleep(sample_seconds)
     idle_after, total_after = read_cpu_stat()
@@ -79,6 +82,7 @@ def get_cpu_usage_percent(sample_seconds: float) -> float:
 
 
 def get_memory_usage_percent() -> float:
+    """Calculate memory utilization using MemAvailable when the kernel exposes it."""
     meminfo = {}
 
     for line in Path("/proc/meminfo").read_text(encoding="utf-8").splitlines():
@@ -95,6 +99,7 @@ def get_memory_usage_percent() -> float:
 
 
 def get_zombie_processes() -> list[dict[str, str | int]]:
+    """Scan /proc for processes whose state is Z and return useful identifiers."""
     zombies = []
 
     for proc_dir in Path("/proc").iterdir():
@@ -130,6 +135,7 @@ def get_zombie_processes() -> list[dict[str, str | int]]:
 
 
 def parse_target_list(raw_targets: str, group_name: str) -> list[TcpTarget]:
+    """Parse a comma-separated host:port list into named TCP targets."""
     targets = []
 
     for index, item in enumerate(raw_targets.split(","), start=1):
@@ -148,6 +154,7 @@ def parse_target_list(raw_targets: str, group_name: str) -> list[TcpTarget]:
 
 
 def check_tcp_connection(target: TcpTarget, timeout_seconds: float) -> TcpCheckResult:
+    """Resolve the target and try each returned address until one TCP connect succeeds."""
     start_time = time.monotonic()
 
     try:
@@ -168,6 +175,8 @@ def check_tcp_connection(target: TcpTarget, timeout_seconds: float) -> TcpCheckR
             latency_ms=None,
         )
 
+    # getaddrinfo may return multiple IPv4/IPv6 addresses. Trying each one avoids
+    # reporting a failure when only the first candidate address is unavailable.
     last_error = None
 
     for family, socktype, proto, _, sockaddr in addresses:
@@ -223,6 +232,7 @@ def check_tcp_connection(target: TcpTarget, timeout_seconds: float) -> TcpCheckR
 
 
 def setup_logging(log_file: str) -> None:
+    """Configure logs for both journald/stdout and the local assignment log file."""
     handlers = [logging.StreamHandler()]
 
     if log_file:
@@ -237,6 +247,7 @@ def setup_logging(log_file: str) -> None:
 
 
 def write_log(level: int, event: str, **fields: object) -> None:
+    """Write one compact JSON event so logs are easy to grep or ship later."""
     log_item = {"event": event, **fields}
     message = json.dumps(log_item, separators=(",", ":"), sort_keys=True)
 
@@ -244,6 +255,7 @@ def write_log(level: int, event: str, **fields: object) -> None:
 
 
 def run_one_check(args: argparse.Namespace, targets: Iterable[TcpTarget]) -> None:
+    """Run one full collection cycle: resources first, then network checks."""
     cpu_percent = get_cpu_usage_percent(args.cpu_sample_seconds)
     memory_percent = get_memory_usage_percent()
     zombies = get_zombie_processes()
@@ -263,7 +275,7 @@ def run_one_check(args: argparse.Namespace, targets: Iterable[TcpTarget]) -> Non
         write_log(logging.WARNING, "memory_high", memory_percent=memory_percent, threshold=args.memory_threshold)
 
     if zombies:
-        # Log 前 20 筆即可，避免某台機器異常時把 log 打爆。
+        # Cap the process list so one unhealthy host cannot flood the local log.
         write_log(logging.WARNING, "zombie_processes_found", zombie_count=len(zombies), zombies=zombies[:20])
 
     for target in targets:
@@ -274,6 +286,7 @@ def run_one_check(args: argparse.Namespace, targets: Iterable[TcpTarget]) -> Non
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Build CLI flags, with environment variables as deployment-friendly defaults."""
     parser = argparse.ArgumentParser(description="Lightweight Linux monitoring agent")
 
     parser.add_argument("--interval", type=float, default=float(os.getenv("MONITOR_INTERVAL", "60")))
@@ -290,6 +303,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
+    """Start the agent loop. --once is useful for smoke tests and CI checks."""
     args = build_parser().parse_args()
     setup_logging(args.log_file)
 
