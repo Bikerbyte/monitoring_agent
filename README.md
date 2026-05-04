@@ -21,19 +21,14 @@ If you wish for larger scale monitoring agent integreted with Terraform/ Ansible
 | Start on boot | `sre-monitoring-agent.service` |
 | Maintainability bonus | Environment-driven config, JSON logs, install script, Ansible deployment example, logrotate |
 
-## Repository Structure
+## Demo
 
-```text
-monitoring_agent.py
-sre-monitoring-agent.service
-deploy/
-  install.sh
-  logrotate/
-    sre-monitoring-agent
-  ansible/
-    deploy.yml
-    inventory.example.ini
-```
+Log:
+<img width="1032" height="219" alt="image" src="https://github.com/user-attachments/assets/55c17df4-3040-4f27-ab39-d1cf93da2a68" />
+
+Startup Service:
+<img width="1019" height="227" alt="image" src="https://github.com/user-attachments/assets/8d329698-9dbf-4226-ba36-fe25f3b61456" />
+
 
 ## Manual Run
 
@@ -118,22 +113,4 @@ sudo systemctl daemon-reload
 sudo systemctl restart sre-monitoring-agent
 ```
 
-## Log Examples
 
-Normal resource collection:
-
-```json
-{"cpu_percent":12.31,"event":"metrics_collected","memory_percent":48.9,"zombie_count":0}
-```
-
-DNS resolution failure:
-
-```json
-{"event":"tcp_check","failure_type":"dns_resolution_error","host":"bad.example","latency_ms":null,"message":"[Errno -2] Name or service not known","ok":false,"port":443,"target":"external-1"}
-```
-
-TCP timeout:
-
-```json
-{"event":"tcp_check","failure_type":"tcp_connection_timeout","host":"192.168.1.254","latency_ms":null,"message":"timed out","ok":false,"port":80,"target":"internal-2"}
-```
