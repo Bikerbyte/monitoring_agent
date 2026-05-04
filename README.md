@@ -1,10 +1,10 @@
 # SRE Monitoring Agent
 
-Lightweight Linux monitoring agent base on python script.
+A lightweight Linux monitoring agent implemented in Python.
 
 The agent runs locally on each server, periodically records resource metrics, checks internal and external TCP connectivity, classifies network failures, and writes structured JSON logs to the local machine.
 
-If you wish for larger scale monitoring agent integreted with Terraform/ Ansible/ Grafana, please refer to the repo below. https://github.com/Bikerbyte/iac-monitoring-system
+For a larger-scale monitoring stack integrated with Terraform, Ansible, and Grafana, see:  https://github.com/Bikerbyte/iac-monitoring-system
 
 ## Repository Structure
 
