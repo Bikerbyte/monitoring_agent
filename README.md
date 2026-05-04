@@ -1,8 +1,10 @@
 # SRE Monitoring Agent
 
-Lightweight Linux monitoring agent for the SRE take-home assignment.
+Lightweight Linux monitoring agent base on python script.
 
 The agent runs locally on each server, periodically records resource metrics, checks internal and external TCP connectivity, classifies network failures, and writes structured JSON logs to the local machine.
+
+If you wish for larger scale monitoring agent integreted with Terraform/ Ansible/ Grafana etc, please check repo https://github.com/Bikerbyte/iac-monitoring-system
 
 ## Requirement Mapping
 
@@ -135,11 +137,3 @@ TCP timeout:
 ```json
 {"event":"tcp_check","failure_type":"tcp_connection_timeout","host":"192.168.1.254","latency_ms":null,"message":"timed out","ok":false,"port":80,"target":"internal-2"}
 ```
-
-## Design Notes
-
-- The agent reads Linux `/proc` directly to avoid third-party runtime dependencies.
-- Logs are JSON so they can be consumed later by journald, a log shipper, or a central log pipeline.
-- The network check resolves DNS explicitly before opening TCP sockets, making DNS failures distinguishable from TCP failures.
-- The Ansible playbook is intentionally small: it demonstrates repeatable deployment to many servers without turning the take-home into a full monitoring platform.
-- Terraform is intentionally omitted because the assignment asks for an agent deployed on existing lab servers, not infrastructure provisioning.
