@@ -4,7 +4,7 @@ Lightweight Linux monitoring agent base on python script.
 
 The agent runs locally on each server, periodically records resource metrics, checks internal and external TCP connectivity, classifies network failures, and writes structured JSON logs to the local machine.
 
-If you wish for larger scale monitoring agent integreted with Terraform/ Ansible/ Grafana etc, please check repo https://github.com/Bikerbyte/iac-monitoring-system
+If you wish for larger scale monitoring agent integreted with Terraform/ Ansible/ Grafana, please refer to the repo below. https://github.com/Bikerbyte/iac-monitoring-system
 
 ## Requirement Mapping
 
