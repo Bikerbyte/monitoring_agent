@@ -6,20 +6,20 @@ The agent runs locally on each server, periodically records resource metrics, ch
 
 If you wish for larger scale monitoring agent integreted with Terraform/ Ansible/ Grafana, please refer to the repo below. https://github.com/Bikerbyte/iac-monitoring-system
 
-## Requirement Mapping
+## Repository Structure
 
-| Assignment requirement | Implementation |
-| --- | --- |
-| Python or Bash script | `monitoring_agent.py` |
-| Agent log stored locally | `/var/log/sre-monitoring-agent.log` |
-| CPU utilization | Reads `/proc/stat` |
-| Memory usage | Reads `/proc/meminfo` |
-| Zombie processes | Scans `/proc/<pid>/stat` |
-| Internal TCP checks | `www.graid.com:80`, `192.168.1.254:80` |
-| External TCP checks | `google.com:443`, `1.1.1.1:443` |
-| Failure classification | DNS resolution, TCP timeout, connection refused, generic TCP error |
-| Start on boot | `sre-monitoring-agent.service` |
-| Maintainability bonus | Environment-driven config, JSON logs, install script, Ansible deployment example, logrotate |
+```text
+monitoring_agent.py
+sre-monitoring-agent.service
+deploy/
+  install.sh
+  uninstall.sh
+  logrotate/
+    sre-monitoring-agent
+  ansible/
+    deploy.yml
+    inventory.example.ini
+```
 
 ## Demo
 
@@ -45,7 +45,7 @@ For local testing without writing to `/var/log`:
 ./monitoring_agent.py --once --log-file ./sre-monitoring-agent.log
 ```
 
-## Install With systemd
+## Install 
 
 Use the bundled installer on a Linux server:
 
@@ -53,7 +53,7 @@ Use the bundled installer on a Linux server:
 sudo ./deploy/install.sh
 ```
 
-The installer copies the script to `/opt/sre-monitoring-agent`, installs the systemd unit, installs logrotate config, reloads systemd, and enables the service on boot.
+The installer copies the script to `/opt/sre-monitoring-agent` and enables the service on boot.
 
 Check service and logs:
 
@@ -62,6 +62,28 @@ systemctl status sre-monitoring-agent
 journalctl -u sre-monitoring-agent -f
 tail -f /var/log/sre-monitoring-agent.log
 ```
+
+## Uninstall 
+
+```bash
+sudo ./deploy/uninstall.sh
+```
+
+
+## Requirement Mapping
+
+| Assignment requirement | Implementation |
+| --- | --- |
+| Python or Bash script | `monitoring_agent.py` |
+| Agent log stored locally | `/var/log/sre-monitoring-agent.log` |
+| CPU utilization | Reads `/proc/stat` |
+| Memory usage | Reads `/proc/meminfo` |
+| Zombie processes | Scans `/proc/<pid>/stat` |
+| Internal TCP checks | `www.graid.com:80`, `192.168.1.254:80` |
+| External TCP checks | `google.com:443`, `1.1.1.1:443` |
+| Failure classification | DNS resolution, TCP timeout, connection refused, generic TCP error |
+| Start on boot | `sre-monitoring-agent.service` |
+| Maintainability bonus | Environment-driven config, JSON logs, install script, Ansible deployment example, logrotate |
 
 ## Deploy With Ansible
 
@@ -79,7 +101,7 @@ ansible-playbook -i deploy/ansible/inventory.ini deploy/ansible/deploy.yml
 
 The playbook installs Python 3, copies the agent, installs the systemd unit, installs logrotate config, and starts the service.
 
-## Configuration
+## Configuration & ENV
 
 The systemd unit sets these environment variables. They can be changed in `sre-monitoring-agent.service` or overridden with a systemd drop-in.
 

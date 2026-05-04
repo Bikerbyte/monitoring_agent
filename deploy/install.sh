@@ -18,6 +18,7 @@ install -m 0755 "${REPO_ROOT}/monitoring_agent.py" "${APP_DIR}/monitoring_agent.
 install -m 0644 "${REPO_ROOT}/sre-monitoring-agent.service" "${SERVICE_PATH}"
 install -m 0644 "${SCRIPT_DIR}/logrotate/sre-monitoring-agent" "${LOGROTATE_PATH}"
 
+# Enable service 
 systemctl daemon-reload
 systemctl enable --now sre-monitoring-agent
 
